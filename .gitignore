@@ -1,0 +1,26 @@
+### Generated data — too large for git
+fastq/
+fastq_sens/
+out/
+out_sens/
+
+### Sequencing files
+*.fastq.gz
+*.bam
+*.bai
+*.vcf.gz
+*.vcf.gz.tbi
+*.bed.gz
+*.bed.gz.csi
+*.bed.gz.tbi
+
+### Pipeline intermediates
+*.tsv
+*.html
+*.log
+gen.log
+
+### Python
+__pycache__/
+*.pyc
+*.pyo
