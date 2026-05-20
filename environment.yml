@@ -1,0 +1,18 @@
+name: ngs
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - bwa-mem2
+  - samtools>=1.17
+  - bcftools>=1.17
+  - fgbio>=2.1
+  - vardict-java
+  - mosdepth
+  - htslib          # tabix
+  - parallel
+  - r-base
+  - bioconductor-variantannotation  # teststrandbias.R / var2vcf_valid.pl
+  - pysam

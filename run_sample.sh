@@ -5,11 +5,12 @@ START_TIME=$(date +%s)
 trap 'echo ""; echo "=== TOTAL: $(( ($(date +%s) - START_TIME) / 60 )) min ($(( $(date +%s) - START_TIME )) sec) ==="' EXIT
 SAMPLE="$1"
 THREADS="${2:-8}"
-FQDIR="${3:-$HOME/idthybtest/fastq}"
-OUTBASE="${4:-$HOME/idthybtest/out}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FQDIR="${3:-$SCRIPT_DIR/fastq}"
+OUTBASE="${4:-$SCRIPT_DIR/out}"
 
 REF=~/ref/hg38_canonical/hg38_canonical.fa
-BED=~/idthybtest/panel.bed
+BED="$SCRIPT_DIR/panel.bed"
 OUT="$OUTBASE/$SAMPLE"
 mkdir -p "$OUT"
 

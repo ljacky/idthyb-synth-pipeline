@@ -349,9 +349,7 @@ def simulate_sample(sample_cfg, targets, variant_target_map,
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--bed",
-        default=os.path.expanduser(
-            "~/seqtest/idtdesigns/Design Output wisdom_v3_final green/"
-            "Targets-XGEN.7ECA75CAFC214C2E982211ED4AF76C73.g.bed"))
+        default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "panel.bed"))
     p.add_argument("--ref",
         default=os.path.expanduser("~/ref/hg38_canonical/hg38_canonical.fa"))
     p.add_argument("--outdir",   default="fastq")
