@@ -97,12 +97,12 @@ All negative controls within acceptance criteria. Run approved for reporting.
 
 | Sample | Accession | Patient ID | Result | Variants detected | Report status |
 |---|---|---|---|---|---|
-| sample1 | NGS-2026-052101 | Hemingway, Ernest M. | **POSITIVE** | KRAS p.Gly12Asp, PIK3CA p.His1047Arg | Ready for director review |
-| sample2 | NGS-2026-052102 | Woolf, Virginia A. | **POSITIVE** | NOTCH1 p.Pro2415Leu | Ready for director review |
-| sample3 | NGS-2026-052103 | Dickens, Charles J. | **POSITIVE** | TP53 p.Arg175His | Ready for director review |
-| sample4 | NGS-2026-052104 | Austen, Jane C. | **POSITIVE** | EGFR p.Leu858Arg, TP53 p.Arg175His | Ready for director review |
-| sample5 | NGS-2026-052105 | Kafka, Franz J. | **NEGATIVE** | None detected | Ready for director review |
-| sample6 | NGS-2026-052106 | Morrison, Toni E. | **NEGATIVE** | None detected | Ready for director review |
+| sample1 | NGS-2026-052101 | Hemingway, Ernest M. | **VARIANTS DETECTED** | KRAS p.Gly12Asp, PIK3CA p.His1047Arg | Ready for director review |
+| sample2 | NGS-2026-052102 | Woolf, Virginia A. | **VARIANTS DETECTED** | NOTCH1 p.Pro2415Leu | Ready for director review |
+| sample3 | NGS-2026-052103 | Dickens, Charles J. | **VARIANTS DETECTED** | TP53 p.Arg175His | Ready for director review |
+| sample4 | NGS-2026-052104 | Austen, Jane C. | **VARIANTS DETECTED** | EGFR p.Leu858Arg, TP53 p.Arg175His | Ready for director review |
+| sample5 | NGS-2026-052105 | Kafka, Franz J. | **NO REPORTABLE VARIANTS DETECTED** | None detected | Ready for director review |
+| sample6 | NGS-2026-052106 | Morrison, Toni E. | **NO REPORTABLE VARIANTS DETECTED** | None detected | Ready for director review |
 
 ---
 
@@ -110,9 +110,9 @@ All negative controls within acceptance criteria. Run approved for reporting.
 
 - **UMI consensus vs. raw VCF:** Variant calling is performed on the consensus BAM only. The raw (pre-consensus) VCF is provided as an internal QC artefact and is not used for reporting.
 
-- **Low VAF calls at 2,000× raw / ~367× consensus depth:** The validated reporting threshold at this depth is **0.5% VAF** with ≥ 2 consensus supporting reads. Calls below this threshold (sample2 NOTCH1 at 0.26%, sample4 TP53 at 0.30%) are at the assay LOD. VD = 2 for both; orthogonal confirmation is recommended before clinical action.
+- **Low VAF calls at 2,000× raw / ~367× consensus depth:** The validated reporting threshold is **0.2% VAF** with ≥ 2 consensus supporting reads. NOTCH1 P2415L (Woolf, 0.26% VAF) and TP53 R175H (Austen, 0.30% VAF) are above this threshold; both are supported by VD = 2 consensus reads. Orthogonal confirmation is recommended before clinical action at low consensus read counts.
 
-- **EGFR L858R (sample4) and KRAS G12D (sample1):** Observed VAFs (0.57% and 0.43% respectively) are near the reporting threshold due to low total consensus depth (525× and 463×) at these targets at 2,000× raw input. Both are supported by high-quality consensus reads (MQ = 60) and pass all VarDict filters.
+- **EGFR L858R (sample4) and KRAS G12D (sample1):** Observed VAFs (0.57% and 0.43% respectively) are above the 0.2% reporting threshold. Consensus depth at these targets is low (525× and 463×) due to per-target coverage variation at 2,000× raw input; both calls are supported by high-quality consensus reads (MQ = 60) and pass all VarDict filters. Orthogonal confirmation is recommended given the low variant read counts (VD = 3 and VD = 2 respectively).
 
 - **PIK3CA E545K (sample2):** No variant reads were detected at the E545K position (chr3:179,218,303). At 366× consensus depth and 0.5% VAF, the expected number of alt consensus reads is ~1.8; zero alt reads is a ~16% probability event. This result is classified as below-LOD rather than true negative. Repeat testing at higher input depth is recommended if clinical suspicion is high.
 

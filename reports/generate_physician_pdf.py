@@ -32,7 +32,7 @@ GENES_TESTED = (
 
 LIMITATIONS = (
     "This assay detects somatic single nucleotide variants and small indels "
-    "within 251 target regions (~77 kbp) at VAF ≥0.5% with validated sensitivity "
+    "within 251 target regions (~77 kbp) at VAF ≥0.2% with validated sensitivity "
     "of 98.4% at ≥20,000× raw input depth (≥400× consensus depth after UMI deduplication). "
     "Structural variants, copy number alterations, gene fusions, large indels, "
     "intronic variants outside defined capture regions, and variants in regions "
@@ -57,7 +57,7 @@ METHOD_SUMMARY = (
     "grouped by UMI using fgbio (adjacency strategy, ≤1 edit distance), and "
     "molecular consensus sequences are called requiring ≥2 reads per UMI family. "
     "Somatic variants are called on the consensus BAM with VarDict at minimum "
-    "allele frequency 0.001. Variants ≥0.5% consensus VAF with ≥2 consensus "
+    "allele frequency 0.001. Variants ≥0.2% consensus VAF with ≥2 consensus "
     "supporting reads are reported. UMI deduplication reduces sequencing noise "
     "by >800-fold. Run-level negative controls are included on every sequencing run."
 )
@@ -88,7 +88,7 @@ PATIENTS = [
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
         "depth":      "463× / 714× (consensus)",
-        "result":     "POSITIVE",
+        "result":     "VARIANTS DETECTED",
         "variants": [
             {
                 "gene":    "KRAS",
@@ -109,9 +109,11 @@ PATIENTS = [
                     "below) indicates dual activation of RAS and PI3K pathways, a combination "
                     "associated with resistance to single-agent targeted therapies and may "
                     "influence enrolment eligibility in clinical trials. NOTE: Observed VAF "
-                    "(0.43%) is near the assay reporting threshold; this call is supported "
-                    "by 2 high-quality consensus reads and has been reviewed by the laboratory "
-                    "director. Orthogonal confirmation is recommended before clinical action."
+                    "(0.43%) is above the 0.2% reporting threshold; this call is supported "
+                    "by 2 high-quality consensus reads at 463× consensus depth. The low "
+                    "consensus read count (VD = 2) reflects limited target coverage at "
+                    "2,000× raw input; orthogonal confirmation is recommended before "
+                    "clinical action."
                 ),
             },
             {
@@ -153,7 +155,7 @@ PATIENTS = [
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
         "depth":      "769× (consensus)",
-        "result":     "POSITIVE",
+        "result":     "VARIANTS DETECTED",
         "variants": [
             {
                 "gene":    "NOTCH1",
@@ -174,11 +176,9 @@ PATIENTS = [
                     "context of confirmed dysplasia, detection of a NOTCH1 tumour suppressor "
                     "variant supports malignant progression risk. Clinical correlation and "
                     "multidisciplinary review are recommended. "
-                    "NOTE: Observed VAF (0.26%) is below the assay nominal 0.5% reporting "
-                    "threshold. This call is at the limit of detection (VD = 2 consensus "
-                    "reads at 769× consensus depth) and has been reviewed and approved by "
-                    "the laboratory director. Repeat testing at higher sequencing depth or "
-                    "orthogonal confirmation is strongly recommended before clinical action."
+                    "NOTE: Observed VAF (0.26%) is above the 0.2% reporting threshold "
+                    "and is supported by 2 consensus reads at 769× consensus depth. "
+                    "Orthogonal confirmation is recommended before clinical action."
                 ),
             },
         ],
@@ -199,7 +199,7 @@ PATIENTS = [
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
         "depth":      "664× (consensus)",
-        "result":     "POSITIVE",
+        "result":     "VARIANTS DETECTED",
         "variants": [
             {
                 "gene":    "TP53",
@@ -241,7 +241,7 @@ PATIENTS = [
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
         "depth":      "367× (mean consensus)",
-        "result":     "NEGATIVE",
+        "result":     "NO REPORTABLE VARIANTS DETECTED",
         "variants": [],
         "neg_genes": ALL_GENES,
     },
@@ -257,7 +257,7 @@ PATIENTS = [
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
         "depth":      "365× (mean consensus)",
-        "result":     "NEGATIVE",
+        "result":     "NO REPORTABLE VARIANTS DETECTED",
         "variants": [],
         "neg_genes": ALL_GENES,
     },
@@ -311,11 +311,9 @@ PATIENTS = [
                     "NGS-2026-052103). Co-occurrence of EGFR L858R and TP53 R175H has been "
                     "associated with resistance to EGFR-directed therapies in other tumour "
                     "types; multidisciplinary tumour board review is recommended. "
-                    "NOTE: Observed VAF (0.30%) is below the assay nominal 0.5% reporting "
-                    "threshold. This call is at the limit of detection (VD = 2 consensus "
-                    "reads at 669× consensus depth) and has been reviewed and approved by "
-                    "the laboratory director. Orthogonal confirmation is recommended before "
-                    "clinical action."
+                    "NOTE: Observed VAF (0.30%) is above the 0.2% reporting threshold "
+                    "and is supported by 2 consensus reads at 669× consensus depth. "
+                    "Orthogonal confirmation is recommended before clinical action."
                 ),
             },
         ],
@@ -386,7 +384,7 @@ class ClinicalPDF(FPDF):
 
 
 def result_badge(pdf, result):
-    if result == "POSITIVE":
+    if result == "VARIANTS DETECTED":
         pdf.set_fill_color(*RED)
     else:
         pdf.set_fill_color(0, 120, 0)
@@ -473,7 +471,7 @@ def patient_page(pdf, pt):
         pdf.ln(3)
 
         # ── Interpretation ──
-        pdf.section_bar('CLINICAL INTERPRETATION')
+        pdf.section_bar('VARIANT ANNOTATION')
         for v in pt['variants']:
             pdf.set_font('DejaVu', 'B', 8)
             tier_col = TIER_COLOURS.get(v['tier'], BLACK)
@@ -488,7 +486,7 @@ def patient_page(pdf, pt):
         pdf.section_bar('INTERPRETATION')
         pdf.wrapped_cell(
             "No pathogenic or likely pathogenic somatic variants were detected in the "
-            "21 genes covered by this assay at ≥0.5% VAF with ≥2 consensus supporting "
+            "21 genes covered by this assay at ≥0.2% VAF with ≥2 consensus supporting "
             "reads. A negative result does not exclude malignancy. Variants below the "
             "reporting threshold, variants outside the 251 assay target regions, "
             "structural variants, and copy number alterations are not assessed by this "
