@@ -16,8 +16,8 @@ from fpdf import FPDF, XPos, YPos
 
 RUN_DATE      = "2026-05-20"
 RUN_ID        = "NGS-RUN-2026-052002"
-LAB_NAME      = "Wisdom Bioscience"
-LAB_ADDRESS   = "166 N Waverly Street, Orange, CA 92866"
+LAB_NAME      = "Wisdom BioScience, Inc."
+LAB_ADDRESS   = "300 Spectrum Center Drive, Suite 400, Irvine, CA 92618"
 LAB_PHONE     = "(555) 555-5555"
 LAB_CLIA      = "22D2026001"
 LAB_CAP       = "1234567"

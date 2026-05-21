@@ -1,6 +1,6 @@
 # Oral SCC Somatic Variant Panel — Laboratory Technical Report (xGen UMI Capture)
 
-**Laboratory:** Wisdom Bioscience — 166 N Waverly Street, Orange, CA 92866 — (555) 555-5555  
+**Laboratory:** Wisdom BioScience, Inc. — 300 Spectrum Center Drive, Suite 400, Irvine, CA 92618 — (555) 555-5555  
 **CLIA:** 22D2026001 | **CAP:** 1234567  
 **Report date:** 2026-05-20  
 **Run ID:** NGS-RUN-2026-052002  
