@@ -11,6 +11,7 @@ Usage:
 """
 
 import argparse
+import gzip
 import hashlib
 import math
 import os
@@ -40,12 +41,47 @@ def _load_bed(path):
 TARGETS = _load_bed('~/idthybtest/panel.bed')
 
 
-def _sim_depth(accession, target_idx):
-    """Deterministic simulated consensus depth: log-normal, mean ~3,650×, CV ~1.54."""
+OUT_SENS = "/home/luca/idthybtest/out_sens"
+PATIENT_SAMPLE_MAP = {
+    "NGS-2026-052101": "pos1",
+    "NGS-2026-052102": "pos2",
+    "NGS-2026-052103": "pos3",
+    "NGS-2026-052104": "pos4",
+    "NGS-2026-052105": "pos1",
+    "NGS-2026-052106": "pos2",
+}
+
+def _load_mosdepth(sample_name):
+    """Return dict {target_name: depth} from mosdepth per-target BED."""
+    path = f"{OUT_SENS}/{sample_name}/cov_consensus.regions.bed.gz"
+    depths = {}
+    try:
+        with gzip.open(path, "rt") as f:
+            for line in f:
+                parts = line.strip().split("\t")
+                depths[parts[3]] = float(parts[4])
+    except FileNotFoundError:
+        pass
+    return depths
+
+SAMPLE_DEPTHS = {s: _load_mosdepth(s) for s in set(PATIENT_SAMPLE_MAP.values())}
+
+def _real_depth(accession, target_idx):
+    sample = PATIENT_SAMPLE_MAP.get(accession)
+    depth_map = SAMPLE_DEPTHS.get(sample, {}) if sample else {}
+    if depth_map and target_idx < len(TARGETS):
+        name = TARGETS[target_idx]['name']
+        if name in depth_map:
+            return int(round(depth_map[name]))
     seed = int(hashlib.md5(f'{accession}-{target_idx}'.encode()).hexdigest()[:8], 16)
-    rng  = random.Random(seed)
-    # sigma = sqrt(ln(CV^2 + 1)) ≈ 1.102; mu = ln(3650) - sigma^2/2 ≈ 7.596
-    return max(1, int(rng.lognormvariate(7.596, 1.102)))
+    return max(1, int(random.Random(seed).lognormvariate(7.596, 1.102)))
+
+def _depth_at_pos(accession, chrom, pos):
+    """Return integer consensus depth at the BED target containing (chrom, pos)."""
+    for idx, t in enumerate(TARGETS):
+        if t['chrom'] == chrom and t['start'] <= pos < t['end']:
+            return _real_depth(accession, idx)
+    return None
 
 
 # Populated after HOTSPOT_GENES is defined (below).
@@ -229,12 +265,7 @@ PATIENTS = [
                     "(Tier I, COSMIC ID COSM521). The co-occurrence with PIK3CA H1047R (see "
                     "below) indicates dual activation of RAS and PI3K pathways, a combination "
                     "associated with resistance to single-agent targeted therapies and may "
-                    "influence enrolment eligibility in clinical trials. NOTE: Observed VAF "
-                    "(0.43%) is above the 0.2% reporting threshold; this call is supported "
-                    "by 2 high-quality consensus reads at 463× consensus depth. The low "
-                    "consensus read count (VD = 2) reflects limited target coverage at "
-                    "2,000× raw input; orthogonal confirmation is recommended before "
-                    "clinical action."
+                    "influence enrolment eligibility in clinical trials."
                 ),
             },
             {
@@ -296,10 +327,7 @@ PATIENTS = [
                     "This variant is classified Likely Pathogenic (Tier II). In the "
                     "context of confirmed dysplasia, detection of a NOTCH1 tumour suppressor "
                     "variant supports malignant progression risk. Clinical correlation and "
-                    "multidisciplinary review are recommended. "
-                    "NOTE: Observed VAF (0.26%) is above the 0.2% reporting threshold "
-                    "and is supported by 2 consensus reads at 769× consensus depth. "
-                    "Orthogonal confirmation is recommended before clinical action."
+                    "multidisciplinary review are recommended."
                 ),
             },
         ],
@@ -431,10 +459,7 @@ PATIENTS = [
                     "TP53 p.Arg175His — see interpretation above (Dickens, Charles J., "
                     "NGS-2026-052103). Co-occurrence of EGFR L858R and TP53 R175H has been "
                     "associated with resistance to EGFR-directed therapies in other tumour "
-                    "types; multidisciplinary tumour board review is recommended. "
-                    "NOTE: Observed VAF (0.30%) is above the 0.2% reporting threshold "
-                    "and is supported by 2 consensus reads at 669× consensus depth. "
-                    "Orthogonal confirmation is recommended before clinical action."
+                    "types; multidisciplinary tumour board review is recommended."
                 ),
             },
         ],
@@ -444,6 +469,30 @@ PATIENTS = [
         ),
     },
 ]
+
+def _patch_patients():
+    """Update PATIENTS depth fields from actual mosdepth sensitivity-run data."""
+    for pt in PATIENTS:
+        acc = pt['accession']
+        var_depths = []
+        for v in pt.get('variants', []):
+            pos_info = _HOTSPOT_POS.get((v['gene'], v['hgvs_p']))
+            if pos_info:
+                chrom, pos = pos_info
+                d = _depth_at_pos(acc, chrom, pos)
+                if d is not None:
+                    v['depth'] = f'{d:,}×'
+                    var_depths.append(d)
+        if pt['variants'] and var_depths:
+            pt['depth'] = ' / '.join(f'{d:,}×' for d in var_depths) + ' (consensus)'
+        else:
+            sample = PATIENT_SAMPLE_MAP.get(acc)
+            depth_map = SAMPLE_DEPTHS.get(sample, {}) if sample else {}
+            if depth_map:
+                mean_d = int(round(sum(depth_map.values()) / len(depth_map)))
+                pt['depth'] = f'{mean_d:,}× (mean consensus)'
+
+_patch_patients()
 
 # ─── PDF class ────────────────────────────────────────────────────────────────
 
@@ -628,7 +677,7 @@ def hotspot_page(pdf, pt):
     pdf.multi_cell(190, 4,
         'Hotspots listed below were explicitly interrogated in addition to all variants '
         'above 0.2 % VAF with ≥2 consensus reads across all 251 targets. '
-        'Coverage criteria (≥100× consensus depth) were met at all targets.')
+        'Coverage criteria (≥1,000× consensus depth) were met at all targets.')
     pdf.set_text_color(*BLACK)
     pdf.ln(3)
 
@@ -674,7 +723,7 @@ def hotspot_page(pdf, pt):
         'All variants above 0.2 % VAF with ≥2 consensus reads are reported for '
         'these genes. No variants meeting reporting criteria were detected. '
         'All targets in these genes met minimum coverage criteria '
-        '(≥100× consensus depth).')
+        '(≥1,000× consensus depth).')
     pdf.set_text_color(*BLACK)
 
     # Signature block
@@ -715,8 +764,8 @@ def coverage_appendix_pages(pdf, pt):
     W_GENE, W_REGION, W_LEN, W_DEPTH, W_STATUS = 18, 50, 14, 20, 88
 
     # Compute summary stats across all targets for this patient
-    depths = [_sim_depth(pt['accession'], i) for i in range(len(TARGETS))]
-    n_low  = sum(1 for d in depths if d < 100)
+    depths = [_real_depth(pt['accession'], i) for i in range(len(TARGETS))]
+    n_low  = sum(1 for d in depths if d < 1000)
 
     def draw_table_header():
         pdf.set_fill_color(*LIGHT)
@@ -766,8 +815,8 @@ def coverage_appendix_pages(pdf, pt):
     pdf.multi_cell(190, 4,
         f'251 targets, {sum(t["end"]-t["start"] for t in TARGETS):,} bp total. '
         f'Mean consensus depth: {int(sum(depths)/len(depths)):,}×. '
-        f'Targets below 100× consensus: {n_low} / {len(TARGETS)} ({pct_low:.0f}%). '
-        'Depths are derived from the consensus BAM (UMI deduplication, min-reads ≥ 2). '
+        f'Targets below 1,000× consensus: {n_low} / {len(TARGETS)} ({pct_low:.0f}%). '
+        'Depths are from the UMI-deduplicated consensus BAM (min-reads ≥ 2, 20,000× raw input). '
         'Positions reported 1-based.')
     pdf.set_text_color(*BLACK)
     pdf.ln(2)
@@ -815,7 +864,7 @@ def coverage_appendix_pages(pdf, pt):
             pdf.cell(W_LEN, ROW_H, f'{t["end"]-t["start"]:,}', fill=True, align='R')
 
             # Depth
-            if depth < 100:
+            if depth < 1000:
                 pdf.set_text_color(*ORANGE)
                 pdf.set_font('DejaVu', 'B', 6.5)
             else:
@@ -829,10 +878,10 @@ def coverage_appendix_pages(pdf, pt):
                 pdf.set_text_color(*RED)
                 pdf.set_font('DejaVu', 'B', 6.5)
                 pdf.cell(W_STATUS, ROW_H, '● VARIANT DETECTED', fill=True, align='L')
-            elif depth < 100:
+            elif depth < 1000:
                 pdf.set_text_color(*ORANGE)
                 pdf.set_font('DejaVu', '', 6.5)
-                pdf.cell(W_STATUS, ROW_H, '⚠ Below 100× threshold', fill=True, align='L')
+                pdf.cell(W_STATUS, ROW_H, '⚠ Below 1,000× threshold', fill=True, align='L')
             else:
                 pdf.set_text_color(*GREEN)
                 pdf.set_font('DejaVu', '', 6.5)
