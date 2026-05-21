@@ -23,7 +23,7 @@ LAB_CLIA      = "22D2026001"
 LAB_CAP       = "1234567"
 ASSAY_NAME    = "Oral SCC Somatic Variant Panel"
 ASSAY_VERSION = "v2.0"
-DIRECTOR      = "Dr. A. Patel, MD PhD, FCAP"
+DIRECTOR      = "Dr. Wisdom, MD PhD, FCAP"
 
 GENES_TESTED = (
     "AJUBA, CASP8, CDKN2A, CUL3, DPYD, EGFR, EP300, FAT1, FBXW7, HRAS, "
@@ -77,12 +77,12 @@ ALL_GENES = (
 
 PATIENTS = [
     {
-        "name":       "Chen, David W.",
+        "name":       "Hemingway, Ernest M.",
         "dob":        "1961-07-22",
         "age":        64,
         "mrn":        "10345621",
         "accession":  "NGS-2026-052101",
-        "physician":  "Dr. Sarah Chen, DDS MD",
+        "physician":  "Dr. Wisdom, DDS MD",
         "indication": "Oral lesion — left lateral tongue",
         "specimen":   "Oral swab, left lateral tongue",
         "collected":  "2026-05-19",
@@ -142,12 +142,12 @@ PATIENTS = [
         ),
     },
     {
-        "name":       "Williams, Margaret A.",
+        "name":       "Woolf, Virginia A.",
         "dob":        "1970-03-11",
         "age":        56,
         "mrn":        "20456732",
         "accession":  "NGS-2026-052102",
-        "physician":  "Dr. Marcus Reid, MD",
+        "physician":  "Dr. Wisdom, MD",
         "indication": "Oral lesion — right buccal mucosa",
         "specimen":   "Oral swab, right buccal mucosa",
         "collected":  "2026-05-19",
@@ -188,12 +188,12 @@ PATIENTS = [
         ),
     },
     {
-        "name":       "Thompson, Richard E.",
+        "name":       "Dickens, Charles J.",
         "dob":        "1951-09-28",
         "age":        74,
         "mrn":        "30567843",
         "accession":  "NGS-2026-052103",
-        "physician":  "Dr. Sarah Chen, DDS MD",
+        "physician":  "Dr. Wisdom, DDS MD",
         "indication": "Oral lesion — left floor of mouth",
         "specimen":   "Oral swab, left floor of mouth",
         "collected":  "2026-05-19",
@@ -230,12 +230,12 @@ PATIENTS = [
         ),
     },
     {
-        "name":       "Patel, Priya S.",
+        "name":       "Kafka, Franz J.",
         "dob":        "1980-02-17",
         "age":        46,
         "mrn":        "50789065",
         "accession":  "NGS-2026-052105",
-        "physician":  "Dr. Linda Park, MD",
+        "physician":  "Dr. Wisdom, MD",
         "indication": "Oral lesion — anterior tongue (surveillance post-excision)",
         "specimen":   "Oral swab, anterior tongue",
         "collected":  "2026-05-19",
@@ -246,12 +246,12 @@ PATIENTS = [
         "neg_genes": ALL_GENES,
     },
     {
-        "name":       "O'Brien, Thomas F.",
+        "name":       "Morrison, Toni E.",
         "dob":        "1955-10-09",
         "age":        70,
         "mrn":        "60890176",
         "accession":  "NGS-2026-052106",
-        "physician":  "Dr. Marcus Reid, MD",
+        "physician":  "Dr. Wisdom, MD",
         "indication": "Oral lesion — left retromolar trigone",
         "specimen":   "Oral swab, left retromolar trigone",
         "collected":  "2026-05-19",
@@ -262,12 +262,12 @@ PATIENTS = [
         "neg_genes": ALL_GENES,
     },
     {
-        "name":       "Garcia, Ana L.",
+        "name":       "Austen, Jane C.",
         "dob":        "1967-12-04",
         "age":        58,
         "mrn":        "40678954",
         "accession":  "NGS-2026-052104",
-        "physician":  "Dr. Linda Park, MD",
+        "physician":  "Dr. Wisdom, MD",
         "indication": "Oral lesion — soft palate",
         "specimen":   "Oral swab, soft palate",
         "collected":  "2026-05-19",
@@ -307,7 +307,7 @@ PATIENTS = [
                 "tier":    "I",
                 "class_":  "Pathogenic",
                 "interp": (
-                    "TP53 p.Arg175His — see interpretation above (Thompson, Richard E., "
+                    "TP53 p.Arg175His — see interpretation above (Dickens, Charles J., "
                     "NGS-2026-052103). Co-occurrence of EGFR L858R and TP53 R175H has been "
                     "associated with resistance to EGFR-directed therapies in other tumour "
                     "types; multidisciplinary tumour board review is recommended. "

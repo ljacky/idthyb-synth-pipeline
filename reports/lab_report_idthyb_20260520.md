@@ -97,12 +97,12 @@ All negative controls within acceptance criteria. Run approved for reporting.
 
 | Sample | Accession | Patient ID | Result | Variants detected | Report status |
 |---|---|---|---|---|---|
-| sample1 | NGS-2026-052101 | Chen, David W. | **POSITIVE** | KRAS p.Gly12Asp, PIK3CA p.His1047Arg | Ready for director review |
-| sample2 | NGS-2026-052102 | Williams, Margaret A. | **POSITIVE** | NOTCH1 p.Pro2415Leu | Ready for director review |
-| sample3 | NGS-2026-052103 | Thompson, Richard E. | **POSITIVE** | TP53 p.Arg175His | Ready for director review |
-| sample4 | NGS-2026-052104 | Garcia, Ana L. | **POSITIVE** | EGFR p.Leu858Arg, TP53 p.Arg175His | Ready for director review |
-| sample5 | NGS-2026-052105 | Patel, Priya S. | **NEGATIVE** | None detected | Ready for director review |
-| sample6 | NGS-2026-052106 | O'Brien, Thomas F. | **NEGATIVE** | None detected | Ready for director review |
+| sample1 | NGS-2026-052101 | Hemingway, Ernest M. | **POSITIVE** | KRAS p.Gly12Asp, PIK3CA p.His1047Arg | Ready for director review |
+| sample2 | NGS-2026-052102 | Woolf, Virginia A. | **POSITIVE** | NOTCH1 p.Pro2415Leu | Ready for director review |
+| sample3 | NGS-2026-052103 | Dickens, Charles J. | **POSITIVE** | TP53 p.Arg175His | Ready for director review |
+| sample4 | NGS-2026-052104 | Austen, Jane C. | **POSITIVE** | EGFR p.Leu858Arg, TP53 p.Arg175His | Ready for director review |
+| sample5 | NGS-2026-052105 | Kafka, Franz J. | **NEGATIVE** | None detected | Ready for director review |
+| sample6 | NGS-2026-052106 | Morrison, Toni E. | **NEGATIVE** | None detected | Ready for director review |
 
 ---
 
