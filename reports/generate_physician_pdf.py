@@ -3,7 +3,7 @@
 generate_physician_pdf.py
 Generate physician-facing clinical reports (PDF) for the Oral SCC Somatic Variant Panel
 (IDT xGen UMI Hybridization Capture, WISDOM v3).
-Produces one page per patient; all positive samples in a single PDF.
+Produces one page per patient; covers both variant-detected and negative-result samples.
 
 Usage:
   python3 generate_physician_pdf.py [--out physician_report_idthyb_20260520.pdf]
@@ -39,7 +39,7 @@ LIMITATIONS = (
     "with low hybridization capture efficiency are not reliably assessed. "
     "A negative result does not exclude malignancy. Tumour heterogeneity, low "
     "tumour cell content, and specimen quality may affect variant allele fraction. "
-    "Variants below the 0.5% VAF reporting threshold may be present but are not "
+    "Variants below the 0.2% VAF reporting threshold may be present but are not "
     "reported. At 2,000× raw sequencing depth, approximately 15–20% of targets "
     "may fall below 100× consensus depth; a result of no variant detected at "
     "low-coverage targets should be interpreted with caution. Results should be "
@@ -273,7 +273,7 @@ PATIENTS = [
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
         "depth":      "525× / 669× (consensus)",
-        "result":     "POSITIVE",
+        "result":     "VARIANTS DETECTED",
         "variants": [
             {
                 "gene":    "EGFR",
