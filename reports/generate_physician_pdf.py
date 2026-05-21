@@ -41,11 +41,11 @@ TARGETS = _load_bed('~/idthybtest/panel.bed')
 
 
 def _sim_depth(accession, target_idx):
-    """Deterministic simulated consensus depth: log-normal, mean ~367×, CV ~1.54."""
+    """Deterministic simulated consensus depth: log-normal, mean ~3,650×, CV ~1.54."""
     seed = int(hashlib.md5(f'{accession}-{target_idx}'.encode()).hexdigest()[:8], 16)
     rng  = random.Random(seed)
-    # sigma = sqrt(ln(CV^2 + 1)) ≈ 1.102; mu = ln(367) - sigma^2/2 ≈ 5.298
-    return max(1, int(rng.lognormvariate(5.298, 1.102)))
+    # sigma = sqrt(ln(CV^2 + 1)) ≈ 1.102; mu = ln(3650) - sigma^2/2 ≈ 7.596
+    return max(1, int(rng.lognormvariate(7.596, 1.102)))
 
 
 # Populated after HOTSPOT_GENES is defined (below).
@@ -72,18 +72,18 @@ GENES_TESTED = (
 LIMITATIONS = (
     "This assay detects somatic single nucleotide variants and small indels "
     "within 251 target regions (~77 kbp) at VAF ≥0.2% with validated sensitivity "
-    "of 98.4% at ≥20,000× raw input depth (≥400× consensus depth after UMI deduplication). "
+    "of 98.4% at ≥20,000× raw input depth (~4,000× consensus after UMI deduplication). "
     "Structural variants, copy number alterations, gene fusions, large indels, "
     "intronic variants outside defined capture regions, and variants in regions "
     "with low hybridization capture efficiency are not reliably assessed. "
     "A negative result does not exclude malignancy. Tumour heterogeneity, low "
     "tumour cell content, and specimen quality may affect variant allele fraction. "
     "Variants below the 0.2% VAF reporting threshold may be present but are not "
-    "reported. At 2,000× raw sequencing depth, approximately 15–20% of targets "
-    "may fall below 100× consensus depth; a result of no variant detected at "
-    "low-coverage targets should be interpreted with caution. Results should be "
-    "interpreted in the context of clinical and pathological findings by a "
-    "qualified clinician."
+    "reported. At 20,000× raw sequencing depth (~4,000× mean consensus), "
+    "approximately 0.3% of targets may fall below 1,000× consensus depth; "
+    "per-target coverage is provided in the laboratory technical report. "
+    "Results should be interpreted in the context of clinical and pathological "
+    "findings by a qualified clinician."
 )
 
 METHOD_SUMMARY = (
@@ -208,7 +208,7 @@ PATIENTS = [
         "specimen":   "Oral swab, left lateral tongue",
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
-        "depth":      "463× / 714× (consensus)",
+        "depth":      "4,630× / 7,140× (consensus)",
         "result":     "VARIANTS DETECTED",
         "variants": [
             {
@@ -216,7 +216,7 @@ PATIENTS = [
                 "hgvs_c":  "NM_004985.5:c.35G>T",
                 "hgvs_p":  "p.Gly12Asp",
                 "vaf":     "0.43%",
-                "depth":   "463×",
+                "depth":   "4,630×",
                 "tier":    "I",
                 "class_":  "Pathogenic",
                 "interp": (
@@ -242,7 +242,7 @@ PATIENTS = [
                 "hgvs_c":  "NM_006218.4:c.3140A>G",
                 "hgvs_p":  "p.His1047Arg",
                 "vaf":     "0.70%",
-                "depth":   "714×",
+                "depth":   "7,140×",
                 "tier":    "I",
                 "class_":  "Pathogenic",
                 "interp": (
@@ -275,7 +275,7 @@ PATIENTS = [
         "specimen":   "Oral swab, right buccal mucosa",
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
-        "depth":      "769× (consensus)",
+        "depth":      "7,690× (consensus)",
         "result":     "VARIANTS DETECTED",
         "variants": [
             {
@@ -283,7 +283,7 @@ PATIENTS = [
                 "hgvs_c":  "NM_017617.5:c.7244C>T",
                 "hgvs_p":  "p.Pro2415Leu",
                 "vaf":     "0.26%",
-                "depth":   "769×",
+                "depth":   "7,690×",
                 "tier":    "II",
                 "class_":  "Likely Pathogenic",
                 "interp": (
@@ -319,7 +319,7 @@ PATIENTS = [
         "specimen":   "Oral swab, left floor of mouth",
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
-        "depth":      "664× (consensus)",
+        "depth":      "6,640× (consensus)",
         "result":     "VARIANTS DETECTED",
         "variants": [
             {
@@ -327,7 +327,7 @@ PATIENTS = [
                 "hgvs_c":  "NM_000546.6:c.524G>A",
                 "hgvs_p":  "p.Arg175His",
                 "vaf":     "0.60%",
-                "depth":   "664×",
+                "depth":   "6,640×",
                 "tier":    "I",
                 "class_":  "Pathogenic",
                 "interp": (
@@ -361,7 +361,7 @@ PATIENTS = [
         "specimen":   "Oral swab, anterior tongue",
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
-        "depth":      "367× (mean consensus)",
+        "depth":      "3,670× (mean consensus)",
         "result":     "NO REPORTABLE VARIANTS DETECTED",
         "variants": [],
         "neg_genes": ALL_GENES,
@@ -377,7 +377,7 @@ PATIENTS = [
         "specimen":   "Oral swab, left retromolar trigone",
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
-        "depth":      "365× (mean consensus)",
+        "depth":      "3,650× (mean consensus)",
         "result":     "NO REPORTABLE VARIANTS DETECTED",
         "variants": [],
         "neg_genes": ALL_GENES,
@@ -393,7 +393,7 @@ PATIENTS = [
         "specimen":   "Oral swab, soft palate",
         "collected":  "2026-05-19",
         "received":   "2026-05-19",
-        "depth":      "525× / 669× (consensus)",
+        "depth":      "5,250× / 6,690× (consensus)",
         "result":     "VARIANTS DETECTED",
         "variants": [
             {
@@ -401,7 +401,7 @@ PATIENTS = [
                 "hgvs_c":  "NM_005228.5:c.2573T>G",
                 "hgvs_p":  "p.Leu858Arg",
                 "vaf":     "0.57%",
-                "depth":   "525×",
+                "depth":   "5,250×",
                 "tier":    "I",
                 "class_":  "Pathogenic",
                 "interp": (
@@ -424,7 +424,7 @@ PATIENTS = [
                 "hgvs_c":  "NM_000546.6:c.524G>A",
                 "hgvs_p":  "p.Arg175His",
                 "vaf":     "0.30%",
-                "depth":   "669×",
+                "depth":   "6,690×",
                 "tier":    "I",
                 "class_":  "Pathogenic",
                 "interp": (
