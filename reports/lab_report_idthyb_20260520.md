@@ -22,7 +22,7 @@
 | Reference | hg38_canonical (GRCh38, chr1–22, X, Y, M) |
 | Pipeline | UMI consensus: fgbio FastqToBam → GroupReadsByUmi → CallMolecularConsensusReads → FilterConsensusReads; Variant calling: VarDict -f 0.001 on consensus BAM |
 | Targets | 251 regions, 77,417 bp, 21 genes |
-| Samples in run | 8 (4 patient, 4 negative controls) |
+| Samples in run | 10 (6 patient, 4 negative controls) |
 | Run status | **PASS** |
 
 ---
@@ -35,6 +35,8 @@
 | sample2 | NGS-2026-052102 | Patient | 1,811× | 366× | 79.8% | 4.9× | 1.54 | **PASS** |
 | sample3 | NGS-2026-052103 | Patient | 1,810× | 366× | 79.8% | 4.9× | 1.54 | **PASS** |
 | sample4 | NGS-2026-052104 | Patient | 1,815× | 367× | 79.8% | 5.0× | 1.54 | **PASS** |
+| sample5 | NGS-2026-052105 | Patient | 1,819× | 367× | 79.8% | 5.0× | 1.54 | **PASS** |
+| sample6 | NGS-2026-052106 | Patient | 1,808× | 365× | 79.8% | 4.9× | 1.54 | **PASS** |
 | QC-NEG-A | (run control) | Neg ctrl | 1,817× | 366× | 79.8% | 5.0× | 1.54 | **PASS** |
 | QC-NEG-B | (run control) | Neg ctrl | 1,822× | 368× | 79.8% | 5.0× | 1.54 | **PASS** |
 | QC-NEG-C | (run control) | Neg ctrl | 1,820× | 367× | 79.8% | 5.0× | 1.54 | **PASS** |
@@ -99,6 +101,8 @@ All negative controls within acceptance criteria. Run approved for reporting.
 | sample2 | NGS-2026-052102 | Williams, Margaret A. | **POSITIVE** | NOTCH1 p.Pro2415Leu | Ready for director review |
 | sample3 | NGS-2026-052103 | Thompson, Richard E. | **POSITIVE** | TP53 p.Arg175His | Ready for director review |
 | sample4 | NGS-2026-052104 | Garcia, Ana L. | **POSITIVE** | EGFR p.Leu858Arg, TP53 p.Arg175His | Ready for director review |
+| sample5 | NGS-2026-052105 | Patel, Priya S. | **NEGATIVE** | None detected | Ready for director review |
+| sample6 | NGS-2026-052106 | O'Brien, Thomas F. | **NEGATIVE** | None detected | Ready for director review |
 
 ---
 

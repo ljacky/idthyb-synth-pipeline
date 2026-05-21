@@ -230,6 +230,38 @@ PATIENTS = [
         ),
     },
     {
+        "name":       "Patel, Priya S.",
+        "dob":        "1980-02-17",
+        "age":        46,
+        "mrn":        "50789065",
+        "accession":  "NGS-2026-052105",
+        "physician":  "Dr. Linda Park, MD",
+        "indication": "Oral lesion — anterior tongue (surveillance post-excision)",
+        "specimen":   "Oral swab, anterior tongue",
+        "collected":  "2026-05-19",
+        "received":   "2026-05-19",
+        "depth":      "367× (mean consensus)",
+        "result":     "NEGATIVE",
+        "variants": [],
+        "neg_genes": ALL_GENES,
+    },
+    {
+        "name":       "O'Brien, Thomas F.",
+        "dob":        "1955-10-09",
+        "age":        70,
+        "mrn":        "60890176",
+        "accession":  "NGS-2026-052106",
+        "physician":  "Dr. Marcus Reid, MD",
+        "indication": "Oral lesion — left retromolar trigone",
+        "specimen":   "Oral swab, left retromolar trigone",
+        "collected":  "2026-05-19",
+        "received":   "2026-05-19",
+        "depth":      "365× (mean consensus)",
+        "result":     "NEGATIVE",
+        "variants": [],
+        "neg_genes": ALL_GENES,
+    },
+    {
         "name":       "Garcia, Ana L.",
         "dob":        "1967-12-04",
         "age":        58,
@@ -452,6 +484,19 @@ def patient_page(pdf, pt):
             pdf.set_text_color(*BLACK)
             pdf.wrapped_cell(v['interp'], indent=2)
             pdf.ln(1)
+    else:
+        pdf.section_bar('INTERPRETATION')
+        pdf.wrapped_cell(
+            "No pathogenic or likely pathogenic somatic variants were detected in the "
+            "21 genes covered by this assay at ≥0.5% VAF with ≥2 consensus supporting "
+            "reads. A negative result does not exclude malignancy. Variants below the "
+            "reporting threshold, variants outside the 251 assay target regions, "
+            "structural variants, and copy number alterations are not assessed by this "
+            "assay. Clinical correlation is required; repeat testing or biopsy should "
+            "be considered if clinical suspicion persists.",
+            font_size=7.5
+        )
+        pdf.ln(1)
 
     # ── Negative genes ──
     pdf.section_bar('GENES WITH NO PATHOGENIC OR LIKELY PATHOGENIC VARIANTS DETECTED')
