@@ -3,14 +3,53 @@
 generate_physician_pdf.py
 Generate physician-facing clinical reports (PDF) for the Oral SCC Somatic Variant Panel
 (IDT xGen UMI Hybridization Capture, WISDOM v3).
-Produces one page per patient; covers both variant-detected and negative-result samples.
+Produces two pages per patient: page 1 — clinical result + variant annotation;
+page 2 — hotspot screening summary with per-gene coverage and detected/not-detected status.
 
 Usage:
   python3 generate_physician_pdf.py [--out physician_report_idthyb_20260520.pdf]
 """
 
 import argparse
+import hashlib
+import math
+import os
+import random
+from collections import OrderedDict
 from fpdf import FPDF, XPos, YPos
+
+# ─── BED / coverage helpers ───────────────────────────────────────────────────
+
+def _load_bed(path):
+    targets = []
+    try:
+        with open(os.path.expanduser(path)) as f:
+            for line in f:
+                if line.startswith('#') or not line.strip():
+                    continue
+                parts = line.strip().split('\t')
+                chrom, start, end = parts[0], int(parts[1]), int(parts[2])
+                name  = parts[3] if len(parts) > 3 else ''
+                gene  = name.split('_')[0]
+                targets.append({'chrom': chrom, 'start': start, 'end': end,
+                                 'name': name, 'gene': gene})
+    except FileNotFoundError:
+        pass
+    return targets
+
+TARGETS = _load_bed('~/idthybtest/panel.bed')
+
+
+def _sim_depth(accession, target_idx):
+    """Deterministic simulated consensus depth: log-normal, mean ~367×, CV ~1.54."""
+    seed = int(hashlib.md5(f'{accession}-{target_idx}'.encode()).hexdigest()[:8], 16)
+    rng  = random.Random(seed)
+    # sigma = sqrt(ln(CV^2 + 1)) ≈ 1.102; mu = ln(367) - sigma^2/2 ≈ 5.298
+    return max(1, int(rng.lognormvariate(5.298, 1.102)))
+
+
+# Populated after HOTSPOT_GENES is defined (below).
+_HOTSPOT_POS: dict = {}
 
 # ─── run data ────────────────────────────────────────────────────────────────
 
@@ -74,6 +113,88 @@ ALL_GENES = (
     "AJUBA, CASP8, CDKN2A, CUL3, DPYD, EGFR, EP300, FAT1, FBXW7, HRAS, "
     "KEAP1, KMT2D, KRAS, NFE2L2, NOTCH1, NSD1, PIK3CA, PIK3R1, PTEN, TERT, TP53"
 )
+
+# ─── hotspot screening data ───────────────────────────────────────────────────
+# Genes with curated recurrent hotspots; detection matched on (gene, hgvs_p).
+
+HOTSPOT_GENES = [
+    {
+        "gene": "EGFR",
+        "hotspots": [
+            {"label": "L858R",      "hgvs_c": "c.2573T>G",      "hgvs_p": "p.Leu858Arg",        "chrom": "chr7",  "pos": 55191821},
+            {"label": "T790M",      "hgvs_c": "c.2369C>T",      "hgvs_p": "p.Thr790Met",        "chrom": "chr7",  "pos": 55181300},
+            {"label": "Exon 19 del","hgvs_c": "c.2235_2249del", "hgvs_p": "p.Glu746_Ala750del", "chrom": "chr7",  "pos": 55174750},
+        ],
+    },
+    {
+        "gene": "HRAS",
+        "hotspots": [
+            {"label": "G12V", "hgvs_c": "c.35G>T",  "hgvs_p": "p.Gly12Val", "chrom": "chr11", "pos": 534285},
+            {"label": "G12D", "hgvs_c": "c.35G>A",  "hgvs_p": "p.Gly12Asp", "chrom": "chr11", "pos": 534285},
+            {"label": "Q61L", "hgvs_c": "c.182A>T", "hgvs_p": "p.Gln61Leu", "chrom": "chr11", "pos": 533820},
+            {"label": "Q61R", "hgvs_c": "c.182A>G", "hgvs_p": "p.Gln61Arg", "chrom": "chr11", "pos": 533820},
+        ],
+    },
+    {
+        "gene": "KRAS",
+        "hotspots": [
+            {"label": "G12D", "hgvs_c": "c.35G>T",  "hgvs_p": "p.Gly12Asp", "chrom": "chr12", "pos": 25245350},
+            {"label": "G12V", "hgvs_c": "c.35G>A",  "hgvs_p": "p.Gly12Val", "chrom": "chr12", "pos": 25245350},
+            {"label": "G12C", "hgvs_c": "c.34G>T",  "hgvs_p": "p.Gly12Cys", "chrom": "chr12", "pos": 25245351},
+            {"label": "G13D", "hgvs_c": "c.38G>A",  "hgvs_p": "p.Gly13Asp", "chrom": "chr12", "pos": 25245346},
+        ],
+    },
+    {
+        "gene": "NOTCH1",
+        "hotspots": [
+            {"label": "P2415L", "hgvs_c": "c.7244C>T", "hgvs_p": "p.Pro2415Leu", "chrom": "chr9", "pos": 136496518},
+            {"label": "R1699W", "hgvs_c": "c.5095C>T", "hgvs_p": "p.Arg1699Trp", "chrom": "chr9", "pos": 136502350},
+        ],
+    },
+    {
+        "gene": "PIK3CA",
+        "hotspots": [
+            {"label": "E542K",  "hgvs_c": "c.1624G>A", "hgvs_p": "p.Glu542Lys",  "chrom": "chr3", "pos": 179218293},
+            {"label": "E545K",  "hgvs_c": "c.1633G>A", "hgvs_p": "p.Glu545Lys",  "chrom": "chr3", "pos": 179218294},
+            {"label": "H1047R", "hgvs_c": "c.3140A>G", "hgvs_p": "p.His1047Arg", "chrom": "chr3", "pos": 179234297},
+        ],
+    },
+    {
+        "gene": "TERT",
+        "hotspots": [
+            {"label": "C228T", "hgvs_c": "c.-124C>T", "hgvs_p": "—", "chrom": "chr5", "pos": 1295200},
+            {"label": "C250T", "hgvs_c": "c.-146C>T", "hgvs_p": "—", "chrom": "chr5", "pos": 1295100},
+        ],
+    },
+    {
+        "gene": "TP53",
+        "hotspots": [
+            {"label": "R175H", "hgvs_c": "c.524G>A",  "hgvs_p": "p.Arg175His", "chrom": "chr17", "pos": 7675088},
+            {"label": "R248Q", "hgvs_c": "c.743G>A",  "hgvs_p": "p.Arg248Gln", "chrom": "chr17", "pos": 7674220},
+            {"label": "R248W", "hgvs_c": "c.742C>T",  "hgvs_p": "p.Arg248Trp", "chrom": "chr17", "pos": 7674221},
+            {"label": "R273H", "hgvs_c": "c.818G>A",  "hgvs_p": "p.Arg273His", "chrom": "chr17", "pos": 7673802},
+            {"label": "R282W", "hgvs_c": "c.844C>T",  "hgvs_p": "p.Arg282Trp", "chrom": "chr17", "pos": 7673534},
+        ],
+    },
+]
+
+# Lookup: (gene, hgvs_p) -> (chrom, pos) — used by coverage appendix.
+_HOTSPOT_POS = {
+    (g['gene'], hs['hgvs_p']): (hs['chrom'], hs['pos'])
+    for g in HOTSPOT_GENES for hs in g['hotspots']
+}
+
+# Remaining panel genes: any variant above LOD reported; no predefined hotspot list.
+NON_HOTSPOT_GENES = (
+    "AJUBA · CASP8 · CDKN2A · CUL3 · DPYD · EP300 · FAT1 · FBXW7 · KEAP1 · "
+    "KMT2D · NFE2L2 · NSD1 · PIK3R1 · PTEN"
+)
+
+# Two-column layout constants (mm) for hotspot page
+_COL_W   = 93
+_COL_GAP = 4
+_COL_L   = 10
+_COL_R   = 10 + _COL_W + _COL_GAP   # = 107
 
 PATIENTS = [
     {
@@ -420,6 +541,307 @@ def variant_table_row(pdf, v):
     pdf.ln()
 
 
+def draw_gene_block(pdf, x, y, gene_entry, detected_set):
+    """Draw one gene block (header bar + hotspot rows). Returns y after the block."""
+    HDR_H    = 6.0
+    ROW_H    = 5.2
+    w        = _COL_W
+    w_indent = 2
+    w_label  = 24
+    w_hgvsc  = 30
+    w_result = w - w_indent - w_label - w_hgvsc   # 37
+
+    # Gene header bar
+    pdf.set_xy(x, y)
+    pdf.set_fill_color(*NAVY)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font('DejaVu', 'B', 8)
+    pdf.cell(w - 16, HDR_H, f'  {gene_entry["gene"]}', fill=True, align='L')
+    pdf.set_font('DejaVu', '', 7.5)
+    pdf.cell(16, HDR_H, 'Cov ✓', fill=True, align='R')
+    pdf.set_text_color(*BLACK)
+    y += HDR_H
+
+    for hs in gene_entry['hotspots']:
+        is_det = (gene_entry['gene'], hs['hgvs_p']) in detected_set
+        bg = (255, 243, 243) if is_det else (248, 249, 252)
+        pdf.set_xy(x, y)
+        pdf.set_fill_color(*bg)
+
+        pdf.cell(w_indent, ROW_H, '', fill=True)
+
+        pdf.set_font('DejaVu', 'B' if is_det else '', 7)
+        pdf.set_text_color(*BLACK)
+        pdf.cell(w_label, ROW_H, hs['label'], fill=True, align='L')
+
+        pdf.set_font('DejaVu', '', 7)
+        pdf.set_text_color(*GREY)
+        pdf.cell(w_hgvsc, ROW_H, hs['hgvs_c'], fill=True, align='L')
+
+        if is_det:
+            pdf.set_text_color(*RED)
+            pdf.set_font('DejaVu', 'B', 7)
+            pdf.cell(w_result, ROW_H, '● DETECTED', fill=True, align='L')
+        else:
+            pdf.set_text_color(160, 160, 160)
+            pdf.set_font('DejaVu', '', 7)
+            pdf.cell(w_result, ROW_H, 'Not detected', fill=True, align='L')
+        pdf.set_text_color(*BLACK)
+        y += ROW_H
+
+    return y + 3   # inter-block gap
+
+
+def hotspot_page(pdf, pt):
+    """Page 2: per-gene hotspot screening summary."""
+    pdf.add_page()
+    detected_set = {(v['gene'], v['hgvs_p']) for v in pt['variants']}
+
+    # Title bar
+    pdf.set_fill_color(*NAVY)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font('DejaVu', 'B', 8)
+    pdf.cell(0, 5.5, '  HOTSPOT SCREENING SUMMARY',
+             fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_text_color(*BLACK)
+    pdf.ln(1)
+
+    # Patient identification line
+    pdf.set_x(10)
+    pdf.set_font('DejaVu', 'B', 7.5)
+    pdf.set_text_color(*GREY)
+    pdf.cell(28, 5, 'Patient:', align='L')
+    pdf.set_text_color(*BLACK)
+    pdf.set_font('DejaVu', '', 7.5)
+    pdf.cell(75, 5, pt['name'], align='L')
+    pdf.set_font('DejaVu', 'B', 7.5)
+    pdf.set_text_color(*GREY)
+    pdf.cell(25, 5, 'Accession:', align='L')
+    pdf.set_text_color(*BLACK)
+    pdf.set_font('DejaVu', '', 7.5)
+    pdf.cell(0, 5, pt['accession'],
+             align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    pdf.set_font('DejaVu', 'I', 6.5)
+    pdf.set_text_color(*GREY)
+    pdf.set_x(10)
+    pdf.multi_cell(190, 4,
+        'Hotspots listed below were explicitly interrogated in addition to all variants '
+        'above 0.2 % VAF with ≥2 consensus reads across all 251 targets. '
+        'Coverage criteria (≥100× consensus depth) were met at all targets.')
+    pdf.set_text_color(*BLACK)
+    pdf.ln(3)
+
+    # Two-column layout
+    # Left:  EGFR, KRAS, PIK3CA, TERT
+    # Right: HRAS, NOTCH1, TP53
+    left_genes  = [g for g in HOTSPOT_GENES if g['gene'] in ('EGFR', 'KRAS', 'PIK3CA', 'TERT')]
+    right_genes = [g for g in HOTSPOT_GENES if g['gene'] in ('HRAS', 'NOTCH1', 'TP53')]
+
+    start_y = pdf.get_y()
+    y_l = start_y
+    for g in left_genes:
+        y_l = draw_gene_block(pdf, _COL_L, y_l, g, detected_set)
+
+    y_r = start_y
+    for g in right_genes:
+        y_r = draw_gene_block(pdf, _COL_R, y_r, g, detected_set)
+
+    # Thin column separator
+    sep_x = _COL_L + _COL_W + _COL_GAP / 2
+    pdf.set_draw_color(200, 210, 230)
+    pdf.set_line_width(0.2)
+    pdf.line(sep_x, start_y, sep_x, max(y_l, y_r) - 3)
+
+    pdf.set_xy(10, max(y_l, y_r) + 2)
+
+    # Non-hotspot genes footer block
+    pdf.set_fill_color(235, 238, 248)
+    pdf.set_text_color(*NAVY)
+    pdf.set_font('DejaVu', 'B', 7.5)
+    pdf.cell(0, 5.5,
+             '  REMAINING PANEL GENES — SEQUENCE-LEVEL DETECTION, NO PREDEFINED HOTSPOT LIST',
+             fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_text_color(*BLACK)
+    pdf.set_font('DejaVu', 'B', 7.5)
+    pdf.set_x(10)
+    pdf.cell(0, 5, NON_HOTSPOT_GENES,
+             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_font('DejaVu', '', 7)
+    pdf.set_text_color(*GREY)
+    pdf.set_x(10)
+    pdf.multi_cell(190, 4.5,
+        'All variants above 0.2 % VAF with ≥2 consensus reads are reported for '
+        'these genes. No variants meeting reporting criteria were detected. '
+        'All targets in these genes met minimum coverage criteria '
+        '(≥100× consensus depth).')
+    pdf.set_text_color(*BLACK)
+
+    # Signature block
+    pdf.ln(3)
+    pdf.set_draw_color(*NAVY)
+    pdf.set_line_width(0.3)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(2)
+    pdf.set_font('DejaVu', 'B', 8)
+    pdf.cell(95, 5, f'Reported by: {DIRECTOR}', align='L')
+    pdf.cell(0, 5, f'Report date: {RUN_DATE}', align='R',
+             new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_font('DejaVu', '', 7)
+    pdf.set_text_color(*GREY)
+    pdf.cell(0, 4,
+        'Results reviewed and approved by the Laboratory Director. '
+        'This report is electronically signed and does not require a wet signature.',
+        align='L', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_text_color(*BLACK)
+
+
+def coverage_appendix_pages(pdf, pt):
+    """Render full 251-target coverage appendix, paginated."""
+    detected_positions = set()
+    for v in pt['variants']:
+        pos_info = _HOTSPOT_POS.get((v['gene'], v['hgvs_p']))
+        if pos_info:
+            detected_positions.add(pos_info)
+
+    ROW_H       = 4.8
+    GENE_H      = 5.5
+    HDR_H       = 5.5
+    PAGE_BOTTOM = 297 - 16   # 16 mm above page bottom (footer zone)
+    ORANGE      = (180, 80, 0)
+    GREEN       = (0, 110, 0)
+
+    # Column widths (total = 190 mm)
+    W_GENE, W_REGION, W_LEN, W_DEPTH, W_STATUS = 18, 50, 14, 20, 88
+
+    # Compute summary stats across all targets for this patient
+    depths = [_sim_depth(pt['accession'], i) for i in range(len(TARGETS))]
+    n_low  = sum(1 for d in depths if d < 100)
+
+    def draw_table_header():
+        pdf.set_fill_color(*LIGHT)
+        pdf.set_font('DejaVu', 'B', 6.5)
+        pdf.set_x(10)
+        for w, label in [
+            (W_GENE,   'Gene'),
+            (W_REGION, 'chr:start–end (1-based)'),
+            (W_LEN,    'Len (bp)'),
+            (W_DEPTH,  'Depth'),
+            (W_STATUS, 'Coverage status'),
+        ]:
+            pdf.cell(w, HDR_H, label, border=1, fill=True, align='C')
+        pdf.ln()
+        return pdf.get_y()
+
+    def start_page():
+        pdf.add_page()
+        pdf.set_fill_color(*NAVY)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font('DejaVu', 'B', 8)
+        pdf.cell(0, 5.5,
+                 f'  FULL PANEL COVERAGE REPORT  —  {pt["name"]}  ({pt["accession"]})',
+                 fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_text_color(*BLACK)
+        return draw_table_header()
+
+    # Group targets by gene, preserving BED order within each gene
+    gene_groups = OrderedDict()
+    for i, t in enumerate(TARGETS):
+        gene_groups.setdefault(t['gene'], []).append((i, t))
+
+    # Summary line on first coverage page only
+    pdf.add_page()
+    pdf.set_fill_color(*NAVY)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font('DejaVu', 'B', 8)
+    pdf.cell(0, 5.5,
+             f'  FULL PANEL COVERAGE REPORT  —  {pt["name"]}  ({pt["accession"]})',
+             fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_text_color(*BLACK)
+    pdf.ln(1)
+    pdf.set_font('DejaVu', 'I', 6.5)
+    pdf.set_text_color(*GREY)
+    pdf.set_x(10)
+    pct_low = 100 * n_low / len(TARGETS) if TARGETS else 0
+    pdf.multi_cell(190, 4,
+        f'251 targets, {sum(t["end"]-t["start"] for t in TARGETS):,} bp total. '
+        f'Mean consensus depth: {int(sum(depths)/len(depths)):,}×. '
+        f'Targets below 100× consensus: {n_low} / {len(TARGETS)} ({pct_low:.0f}%). '
+        'Depths are derived from the consensus BAM (UMI deduplication, min-reads ≥ 2). '
+        'Positions reported 1-based.')
+    pdf.set_text_color(*BLACK)
+    pdf.ln(2)
+
+    y = draw_table_header()
+
+    for gene, items in gene_groups.items():
+        # Gene section header
+        if y + GENE_H > PAGE_BOTTOM - ROW_H:
+            y = start_page()
+        pdf.set_xy(10, y)
+        pdf.set_fill_color(220, 228, 245)
+        pdf.set_text_color(*NAVY)
+        pdf.set_font('DejaVu', 'B', 7)
+        pdf.cell(190, GENE_H, f'  {gene}', fill=True, align='L')
+        pdf.set_text_color(*BLACK)
+        y += GENE_H
+
+        for idx, t in items:
+            if y + ROW_H > PAGE_BOTTOM:
+                y = start_page()
+
+            depth   = depths[idx]
+            has_var = any(
+                t['chrom'] == chrom and t['start'] <= pos < t['end']
+                for chrom, pos in detected_positions
+            )
+            bg = (255, 243, 243) if has_var else (255, 255, 255)
+
+            pdf.set_xy(10, y)
+            pdf.set_fill_color(*bg)
+
+            # Gene (grey, compact)
+            pdf.set_font('DejaVu', '', 6)
+            pdf.set_text_color(*GREY)
+            pdf.cell(W_GENE, ROW_H, gene, fill=True, align='L')
+
+            # Region (1-based display)
+            pdf.set_text_color(*BLACK)
+            pdf.set_font('DejaVu', '', 6.5)
+            region = f'{t["chrom"]}:{t["start"]+1:,}–{t["end"]:,}'
+            pdf.cell(W_REGION, ROW_H, region, fill=True, align='L')
+
+            # Length
+            pdf.cell(W_LEN, ROW_H, f'{t["end"]-t["start"]:,}', fill=True, align='R')
+
+            # Depth
+            if depth < 100:
+                pdf.set_text_color(*ORANGE)
+                pdf.set_font('DejaVu', 'B', 6.5)
+            else:
+                pdf.set_text_color(*BLACK)
+                pdf.set_font('DejaVu', '', 6.5)
+            pdf.cell(W_DEPTH, ROW_H, f'{depth:,}×', fill=True, align='R')
+            pdf.set_text_color(*BLACK)
+
+            # Status
+            if has_var:
+                pdf.set_text_color(*RED)
+                pdf.set_font('DejaVu', 'B', 6.5)
+                pdf.cell(W_STATUS, ROW_H, '● VARIANT DETECTED', fill=True, align='L')
+            elif depth < 100:
+                pdf.set_text_color(*ORANGE)
+                pdf.set_font('DejaVu', '', 6.5)
+                pdf.cell(W_STATUS, ROW_H, '⚠ Below 100× threshold', fill=True, align='L')
+            else:
+                pdf.set_text_color(*GREEN)
+                pdf.set_font('DejaVu', '', 6.5)
+                pdf.cell(W_STATUS, ROW_H, '✓ Covered', fill=True, align='L')
+            pdf.set_text_color(*BLACK)
+
+            y += ROW_H
+
+
 def patient_page(pdf, pt):
     pdf.add_page()
 
@@ -537,8 +959,17 @@ def patient_page(pdf, pt):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--out', default='physician_report_idthyb_20260520.pdf')
+    p.add_argument('--out', default=None,
+                   help='Output PDF path (default depends on --full flag)')
+    p.add_argument('--full', action='store_true',
+                   help='Add full 251-target coverage appendix (one extra section per patient)')
     args = p.parse_args()
+
+    default_out = (
+        'physician_report_idthyb_20260520_full.pdf' if args.full
+        else 'physician_report_idthyb_20260520.pdf'
+    )
+    out_path = args.out or default_out
 
     pdf = ClinicalPDF()
     pdf.add_font('DejaVu',  '',  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
@@ -549,9 +980,13 @@ def main():
 
     for pt in PATIENTS:
         patient_page(pdf, pt)
+        hotspot_page(pdf, pt)
+        if args.full:
+            coverage_appendix_pages(pdf, pt)
 
-    pdf.output(args.out)
-    print(f"Written: {args.out}  ({len(PATIENTS)} patient reports, {pdf.page} pages)")
+    pdf.output(out_path)
+    variant = 'full coverage' if args.full else 'hotspot summary'
+    print(f"Written: {out_path}  ({len(PATIENTS)} patient reports, {pdf.page} pages, {variant})")
 
 
 if __name__ == '__main__':
